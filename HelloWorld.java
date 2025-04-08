@@ -35,6 +35,16 @@ public class HelloWorld {
     private float puloAltura = 20;
     private float puloAtual = 0;
     private int clickCount = 0;
+
+    //quadrado de upgrade 1 = clique de mouse e texto
+    private int upgradeTextoTextureID;
+    private int upgradeTextoTextureID2;
+    private int upgradeTextoTextureID3;
+    private int upgradeTextoTextureID4;
+    private int upgradeTextoTextureID5;
+    private float upgX = 5, upgY = 5, upgW = 100, upgH = 100;
+    private int contagemUpg = 1;
+    private int custoUpg = 1;
     
     private class Estrela {
         float x, y;
@@ -237,6 +247,21 @@ public class HelloWorld {
         if (pontuacaoTextureID > 0) {
             glDeleteTextures(pontuacaoTextureID);
         }
+        if (upgradeTextoTextureID > 0){
+            glDeleteTextures(upgradeTextoTextureID);
+        }
+        if (upgradeTextoTextureID2 > 0){
+            glDeleteTextures(upgradeTextoTextureID2);
+        }
+        if (upgradeTextoTextureID3 > 0){
+            glDeleteTextures(upgradeTextoTextureID3);
+        }
+        if (upgradeTextoTextureID4 > 0){
+            glDeleteTextures(upgradeTextoTextureID4);
+        }
+        if (upgradeTextoTextureID5 > 0){
+            glDeleteTextures(upgradeTextoTextureID5);
+        }
         
         glfwFreeCallbacks(window);
         glfwDestroyWindow(window);
@@ -296,16 +321,38 @@ public class HelloWorld {
                 double mx = xb.get(0);
                 double my = 600 - yb.get(0);
 
+                //Verifica onde cliclou e identifica para saber se está no limite da imagem.png (ponto de inicio da imagem 300x200 dimensionalidade 200x200)
                 if (mx >= imgX && mx <= imgX + imgW && my >= imgY && my <= imgY + imgH) {
                     pulando = true;
                     puloAtual = puloAltura;
                     int fraseIndex = random.nextInt(frases.length);
                     float textoY = imgY + imgH + 10;
                     textosFlutuantes.add(new TextoFlutuante(frases[fraseIndex], 0, textoY, textTextureIDs[fraseIndex]));
-                    clickCount++;
+                    // Atualizando forma de ganhar ponto por conta do upgrade 1
+                    // clickCount++;
+                    clickCount += contagemUpg;
                     
+                    //renderiza toda vez que a imagem.png for clicado, assim atualizando os pontos ao vivo
                     try {
                         pontuacaoTextureID = criarTexturaTexto("Pontos: " + clickCount, 16, Color.WHITE);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                //Em tese, se eu criar um limite aleatorio, posso considerar como 
+                //uma hitbox no espaço da tela para adicionar os upgrades
+
+                if (mx >= upgX && mx <= upgX + upgW && my >= upgY && my <= upgY + upgH){
+                    if(clickCount >= custoUpg){
+                        contagemUpg++;
+                        clickCount -= custoUpg;
+                        custoUpg = custoUpg * 7 / 3;
+                    }
+                    try {
+                        pontuacaoTextureID = criarTexturaTexto("Pontos: " + clickCount, 16, Color.WHITE);
+                        upgradeTextoTextureID4 = criarTexturaTexto("" + contagemUpg, 10, Color.WHITE);
+                        upgradeTextoTextureID5 = criarTexturaTexto("Custo: " + custoUpg, 10, Color.WHITE);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -336,6 +383,13 @@ public class HelloWorld {
             }
             
             pontuacaoTextureID = criarTexturaTexto("Pontos: 0", 16, Color.WHITE);
+
+            //Texto que aparece no quadrado de upgrade
+            upgradeTextoTextureID = criarTexturaTexto("Mais", 10, Color.WHITE);
+            upgradeTextoTextureID2 = criarTexturaTexto("por", 10, Color.WHITE);
+            upgradeTextoTextureID3 = criarTexturaTexto("clique:", 10, Color.WHITE);
+            upgradeTextoTextureID4 = criarTexturaTexto("1", 10, Color.WHITE);
+            upgradeTextoTextureID5 = criarTexturaTexto("Custo: 1", 10, Color.WHITE);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -385,6 +439,37 @@ public class HelloWorld {
             if (pontuacaoTextureID > 0) {
                 renderizarTextura(pontuacaoTextureID, 10, 550, 0, 0);
             }
+
+            //Renderiza o texto de upgrade
+            //Gambiarra a baixo para testar os textos, se possivel criar uma array de upgradeTextoTextureID
+            //Ou fazer alguma forma de aceitar quebra de linha para renderizar a imagem do texto na 
+            //função de renderizar textura
+            //não fui eu que implementei então lkkkkkkkkk
+            if (upgradeTextoTextureID > 0) {
+                renderizarTextura(upgradeTextoTextureID, 25, 80, 0, 0);
+            }
+            if (upgradeTextoTextureID2 > 0) {
+                renderizarTextura(upgradeTextoTextureID2, 30, 60, 0, 0);
+            }
+            if (upgradeTextoTextureID3 > 0) {
+                renderizarTextura(upgradeTextoTextureID3, 15, 40, 0, 0);
+            }
+            if (upgradeTextoTextureID4 > 0) {
+                renderizarTextura(upgradeTextoTextureID4, 40, 20, 0, 0);
+            }
+            if (upgradeTextoTextureID5 > 0) {
+                renderizarTextura(upgradeTextoTextureID5, 10, 5, 0, 0);
+            }
+
+            //Renderizar o quadrado de upgrade
+            glBegin(GL_LINE_STRIP);
+                glColor3f(1f, 1f, 1f);
+                glVertex2f(upgX, upgY);
+                glVertex2f(upgX + upgW, upgY);
+                glVertex2f(upgX + upgW, upgY + upgH);
+                glVertex2f(upgX, upgY + upgH);
+                glVertex2f(upgX, upgY);
+            glEnd();
 
             glfwSwapBuffers(window);
             glfwPollEvents();
@@ -484,7 +569,7 @@ public class HelloWorld {
 	
 		BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g2d = img.createGraphics();
-		g2d.setFont(font);
+		g2d.setFont(font);  
 		FontMetrics fm = g2d.getFontMetrics();
 		int largura = fm.stringWidth(texto) + 10; // Aumentado de 2 para 10 para evitar cortes
 		int altura = fm.getHeight() + 6; // Aumentado de 2 para 6 para garantir espaço vertical
